@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+REMOVE="sudo aptitude purge"
+
+if [ $# -eq 0 ]
+then
+	echo "Usage: $0 [VERSION]..."
+	echo "Example: $0 3.13.0-{32,34,35,36}"
+	exit 1
+fi
+
+for version in "$@"
+do
+	#TODO check installed packages before presenting them
+	read verspkgs < <(echo linux-{headers-$version,image{,-extra}-$version-generic})
+	echo -en "Remove $version packages? (y/n) "
+	if [[ $(read -n 1 r && echo $r) == "y" ]]
+	then
+		pkgs="$pkgs $verspkgs"
+		echo -e "\n$version kernel added to remove list."
+	else
+		echo -e "\nSkipping $version kernel."
+	fi
+done
+
+if [[ $pkgs ]]
+then
+	echo -en "\nList of packages to remove:\n\n$pkgs\n\nProceed? (y/n) "
+	if [[ $(read -n 1 r && echo $r) == "y" ]]
+	then
+		echo -e "\n\n$REMOVE $pkgs"
+		$REMOVE $pkgs
+	else
+		echo -e "\n\nAborted."
+	fi
+else
+	echo "Nothing to remove..."
+fi
+
